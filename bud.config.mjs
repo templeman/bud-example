@@ -4,7 +4,7 @@ export default async (app) => {
       "@src": `src`,
       "@modules": `node_modules`,
       "@scripts": `@src/scripts`,
-      "@styles": `@src/scss`,
+      "@styles": `@src/css`,
       "@dist": `dist`,
     })
 
@@ -26,10 +26,20 @@ export default async (app) => {
       // app: ["./scripts/app", "./scss/style"],
     })
 
-    /**
-     * Reload when editing PHP and SCSS files
-     */
-    .watch(["@src/**/*", app.path("**/*.php")])
+    // Use the build.before action to ensure Sass is available
+    // https://discourse.roots.io/t/bud-6-3-0-and-sass/23570/3
+    .hooks.action("build.before", async (app) => {
+      // Set custom Sass options
+      app.build.items.sass.setOptions({
+        sassOptions: {
+          // Silence legacy API warning
+          // https://sass-lang.com/documentation/breaking-changes/legacy-js-api/
+          // https://github.com/roots/bud/issues/2671
+          silenceDeprecations: ["legacy-js-api"],
+        },
+        sourceMap: true,
+      });
+    })
 
     /**
      * Enable sourcemaps in development
@@ -49,5 +59,6 @@ export default async (app) => {
      * @see {@link https://bud.js.org/reference/bud.watch}
      */
     .setUrl("http://localhost:3000")
-    .setProxyUrl("https://example.test");
+    .setProxyUrl("https://example.test")
+    .watch([app.path("**/*.php")]);
 };
